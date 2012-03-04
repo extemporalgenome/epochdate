@@ -1,3 +1,7 @@
+// Copyright 2012 Kevin Gillette. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 /*
 Represents dates from Jan 1 1970 - Jun 6 2149 as days since the Unix epoch.
 This format requires 2 bytes (it's a uint16), in contrast to the 16 or 20 byte
