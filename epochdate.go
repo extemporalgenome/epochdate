@@ -17,6 +17,10 @@ Conversely, conversions back to standard time format may be done using the
 Local, UTC, and In methods (semantically corresponding to the same-named Time
 methods), but with the result normalized to midnight (the beginning of the day)
 relative to that timezone.
+
+All functions and methods with the same names as those found in the stdlib time
+package have identical semantics in epochdate, with the exception that
+epochdate truncates time-of-day information.
 */
 package epochdate
 
@@ -65,6 +69,12 @@ func NewFromDate(year int, month time.Month, day int) (Date, error) {
 	return NewFromUnix(time.Date(year, month, day, 0, 0, 0, 0, time.UTC).Unix())
 }
 
+// NewFromUnix creates a Date from a Unix timestamp, relative to any location
+// Specifically, if you pass in t.Unix(), where t is a time.Time value with a
+// non-UTC zone, you may receive an unexpected Date. Unless this behavior is
+// specifically desired (returning the date in one location at the given time
+// instant in another location), it's best to use epochdate.NewFromTime(t),
+// which normalizes the resulting Date value by adjusting for zone offsets.
 func NewFromUnix(seconds int64) (d Date, err error) {
 	if UnixInRange(seconds) {
 		d = Date(seconds / day)
@@ -74,14 +84,21 @@ func NewFromUnix(seconds int64) (d Date, err error) {
 	return
 }
 
+// UnixInRange is true if the provided Unix timestamp is in Date's
+// representable range. The timestamp is interpreted according to the semantics
+// used by NewFromUnix. You probably won't need to use this, since this will
+// only return false if NewFromUnix returns an error of ErrOutOfRange.
 func UnixInRange(seconds int64) bool {
 	return seconds >= 0 && seconds <= maxUnix
 }
 
+// Returns an RFC3339/ISO-8601 date string, of the form "2006-01-02".
 func (d Date) String() string {
 	return d.Format(RFC3339)
 }
 
+// Identical to time.Time.Format, except that any time-of-day format specifiers
+// will be equivalent to "00:00:00Z".
 func (d Date) Format(layout string) string {
 	return d.UTC().Format(layout)
 }
@@ -90,14 +107,17 @@ func (d Date) Date() (year int, month time.Month, day int) {
 	return d.UTC().Date()
 }
 
+// UTC returns a UTC Time object set to 00:00:00 on the given date
 func (d Date) UTC() time.Time {
 	return time.Unix(int64(d)*day, 0).UTC()
 }
 
+// Local returns a local Time object set to 00:00:00 on the given date
 func (d Date) Local() time.Time {
 	return d.In(time.Local)
 }
 
+// In returns a location-relative Time object set to 00:00:00 on the given date
 func (d Date) In(loc *time.Location) time.Time {
 	t := time.Unix(int64(d)*day, 0).In(loc)
 	_, offset := t.Zone()
