@@ -44,12 +44,19 @@ var ErrOutOfRange = errors.New("The given date is out of range")
 
 type Date uint16
 
-// Today returns the current date, relative to the current timezone.
+// Today returns the local date at this instant. If the local date does not
+// fall within the representable range, then then zero value will be returned
+// (1970-01-01).
 func Today() Date {
-	date, err := NewFromTime(time.Now())
-	if err != nil {
-		panic(err)
-	}
+	date, _ := NewFromTime(time.Now())
+	return date
+}
+
+// TodayUTC returns the date at this instant, relative to UTC. If the UTC
+// date does not fall within the representable range, then then zero value
+// will be returned (1970-01-01).
+func TodayUTC() Date {
+	date, _ := NewFromTime(time.Now().UTC())
 	return date
 }
 
