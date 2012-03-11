@@ -44,6 +44,7 @@ var ErrOutOfRange = errors.New("The given date is out of range")
 
 type Date uint16
 
+// Today returns the current date, relative to the current timezone.
 func Today() Date {
 	date, err := NewFromTime(time.Now())
 	if err != nil {
@@ -52,6 +53,8 @@ func Today() Date {
 	return date
 }
 
+// Parse follows the same semantics as time.Parse, but ignores time-of-day
+// information and returns a Date value.
 func Parse(layout, value string) (d Date, err error) {
 	t, err := time.Parse(layout, value)
 	if err == nil {
@@ -60,12 +63,16 @@ func Parse(layout, value string) (d Date, err error) {
 	return
 }
 
+// NewFromTime returns a Date equivalent to NewFromDate(t.Date()),
+// where t is a time.Time object.
 func NewFromTime(t time.Time) (Date, error) {
 	s := t.Unix()
 	_, offset := t.Zone()
 	return NewFromUnix(s + int64(offset))
 }
 
+// NewFromDate returns a Date value corresponding to the supplied
+// year, month, and day.
 func NewFromDate(year int, month time.Month, day int) (Date, error) {
 	return NewFromUnix(time.Date(year, month, day, 0, 0, 0, 0, time.UTC).Unix())
 }
@@ -99,26 +106,28 @@ func (d Date) String() string {
 }
 
 // Identical to time.Time.Format, except that any time-of-day format specifiers
-// will be equivalent to "00:00:00Z".
+// that are used will be equivalent to "00:00:00Z".
 func (d Date) Format(layout string) string {
 	return d.UTC().Format(layout)
 }
 
+// Date is semantically identical to the behavior of t.Date(), where t is a
+// time.Time value.
 func (d Date) Date() (year int, month time.Month, day int) {
 	return d.UTC().Date()
 }
 
-// UTC returns a UTC Time object set to 00:00:00 on the given date
+// UTC returns a UTC Time object set to 00:00:00 on the given date.
 func (d Date) UTC() time.Time {
 	return time.Unix(int64(d)*day, 0).UTC()
 }
 
-// Local returns a local Time object set to 00:00:00 on the given date
+// Local returns a local Time object set to 00:00:00 on the given date.
 func (d Date) Local() time.Time {
 	return d.In(time.Local)
 }
 
-// In returns a location-relative Time object set to 00:00:00 on the given date
+// In returns a location-relative Time object set to 00:00:00 on the given date.
 func (d Date) In(loc *time.Location) time.Time {
 	t := time.Unix(int64(d)*day, 0).In(loc)
 	_, offset := t.Zone()
