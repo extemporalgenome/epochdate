@@ -35,8 +35,9 @@ const (
 )
 
 const (
-	RFC3339       = "2006-01-02"
-	AmericanShort = "1-2-06"
+	RFC3339        = "2006-01-02"
+	AmericanShort  = "1-2-06"
+	AmericanCommon = "01-02-06"
 )
 
 var ErrOutOfRange = errors.New("The given date is out of range")
