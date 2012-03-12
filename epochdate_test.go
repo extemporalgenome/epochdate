@@ -102,3 +102,17 @@ func TestDateToTime(t *testing.T) {
 		t.Fatalf("Expected universal time to %q; got %q\n", prefix, f)
 	}
 }
+
+func TestUnix(t *testing.T) {
+	var d Date = 1
+	const (
+		dayInSecs     = 60 * 60 * 24
+		dayInNanosecs = dayInSecs * 1e9
+	)
+	if s := d.Unix(); s != dayInSecs {
+		t.Error("Expected Date(1).Unix() to return", dayInSecs, "but got", s)
+	}
+	if ns := d.UnixNano(); ns != dayInNanosecs {
+		t.Error("Expected Date(1).UnixNano() to return", dayInNanosecs, "but got", ns)
+	}
+}

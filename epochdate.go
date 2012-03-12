@@ -30,8 +30,9 @@ import (
 )
 
 const (
-	day     = 60 * 60 * 24
-	maxUnix = (1<<16)*day - 1
+	day      = 60 * 60 * 24
+	nsPerSec = 1e9
+	maxUnix  = (1<<16)*day - 1
 )
 
 const (
@@ -110,6 +111,19 @@ func UnixInRange(seconds int64) bool {
 // Returns an RFC3339/ISO-8601 date string, of the form "2006-01-02".
 func (d Date) String() string {
 	return d.Format(RFC3339)
+}
+
+// Unix returns the number of seconds elapsed since Jan 1 1970 UTC, from the
+// start of the given date value. In this case, the date is considered to be
+// a UTC date, rather than a location-independent date.
+func (d Date) Unix() int64 {
+	return int64(d) * day
+}
+
+// UnixNano is semantically identical to the Unix method, except that it
+// returns elapsed nanoseconds.
+func (d Date) UnixNano() int64 {
+	return int64(d) * day * nsPerSec
 }
 
 // Identical to time.Time.Format, except that any time-of-day format specifiers
