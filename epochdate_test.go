@@ -5,9 +5,18 @@
 package epochdate
 
 import (
+	"encoding"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
+)
+
+var (
+	_ encoding.TextMarshaler   = Date(0)
+	_ encoding.TextUnmarshaler = new(Date)
+	_ json.Marshaler           = Date(0)
+	_ json.Unmarshaler         = new(Date)
 )
 
 type triple struct {
