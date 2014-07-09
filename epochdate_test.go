@@ -125,3 +125,36 @@ func TestUnix(t *testing.T) {
 		t.Error("Expected Date(1).UnixNano() to return", dayInNanosecs, "but got", ns)
 	}
 }
+
+func TestEncDec(t *testing.T) {
+	const (
+		unquoted = "1970-01-02"
+		quoted   = `"` + unquoted + `"`
+		n        = 1
+	)
+	d := Date(n)
+	b, err := d.MarshalText()
+	if err != nil {
+		t.Error("Unexpected MarshalText error:", err)
+	} else if string(b) != unquoted {
+		t.Errorf("Expected Date(%d).MarshalText() to return %#q but got %#q", n, unquoted, b)
+	}
+	b, err = d.MarshalJSON()
+	if err != nil {
+		t.Error("Unexpected MarshalJSON error:", err)
+	} else if string(b) != quoted {
+		t.Errorf("Expected Date(%d).MarshalJSON() to return %#q but got %#q", n, quoted, b)
+	}
+	err = d.UnmarshalText([]byte(unquoted))
+	if err != nil {
+		t.Error("Unexpected UnmarshalText error:", err)
+	} else if d != n {
+		t.Errorf("Expected Date(%d).UnmarshalText() to return %#q but got %#q", n, unquoted, b)
+	}
+	err = d.UnmarshalJSON([]byte(quoted))
+	if err != nil {
+		t.Error("Unexpected UnmarshalJSON error:", err)
+	} else if d != n {
+		t.Errorf("Expected Date(%d).UnmarshalJSON() to return %#q but got %#q", n, quoted, b)
+	}
+}
