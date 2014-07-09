@@ -156,18 +156,19 @@ func (d Date) In(loc *time.Location) time.Time {
 }
 
 func (d Date) MarshalText() ([]byte, error) {
-	return []byte(d.Format(`"` + RFC3339 + `"`)), nil
+	return []byte(d.Format(RFC3339)), nil
 }
 
 func (d *Date) UnmarshalText(data []byte) (err error) {
-	*d, err = Parse(`"`+RFC3339+`"`, string(data))
+	*d, err = Parse(RFC3339, string(data))
 	return
 }
 
 func (d Date) MarshalJSON() ([]byte, error) {
-	return d.MarshalText()
+	return []byte(d.Format(`"` + RFC3339 + `"`)), nil
 }
 
-func (d *Date) UnmarshalJSON(data []byte) error {
-	return d.UnmarshalText(data)
+func (d *Date) UnmarshalJSON(data []byte) (err error) {
+	*d, err = Parse(`"`+RFC3339+`"`, string(data))
+	return
 }
