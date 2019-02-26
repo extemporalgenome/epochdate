@@ -158,3 +158,20 @@ func TestEncDec(t *testing.T) {
 		t.Errorf("Expected Date(%d).UnmarshalJSON() to return %#q but got %#q", n, quoted, b)
 	}
 }
+
+func TestDate_UnmarshalJSON_null(t *testing.T) {
+	data := []byte("null")
+	input := Date(123)
+	date := input
+	want := input
+
+	err := json.Unmarshal(data, &date)
+	if err != nil {
+		t.Errorf("json.Unmarshal(%q) = %q, want nil", data, err)
+	}
+
+	if date != want {
+		t.Errorf("json.Unmarshal(%q, %v) -> %v, want %v",
+			data, input, date, want)
+	}
+}

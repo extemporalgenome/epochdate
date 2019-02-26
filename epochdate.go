@@ -2,29 +2,30 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-/*
-Represents dates from Jan 1 1970 - Jun 6 2149 as days since the Unix epoch.
-This format requires 2 bytes (it's a uint16), in contrast to the 16 or 20 byte
-representations (on 32 or 64-bit systems, respectively) used by the standard
-time package.
-
-Timezone is accounted for when applicable; when converting from standard time
-format into a Date, the date relative to the time value's zone is retained.
-Times at any point during a given day (relative to timezone) are normalized to
-the same date.
-
-Conversely, conversions back to standard time format may be done using the
-Local, UTC, and In methods (semantically corresponding to the same-named Time
-methods), but with the result normalized to midnight (the beginning of the day)
-relative to that timezone.
-
-All functions and methods with the same names as those found in the stdlib time
-package have identical semantics in epochdate, with the exception that
-epochdate truncates time-of-day information.
-*/
+// Package epochdate provides date handling in a compact format.
+//
+// Represents dates from Jan 1 1970 - Jun 6 2149 as days since the Unix epoch.
+// This format requires 2 bytes (it's a uint16), in contrast to the 16 or 20
+// byte representations (on 32 or 64-bit systems, respectively) used by the
+// standard time package.
+//
+// Timezone is accounted for when applicable; when converting from standard
+// time format into a Date, the date relative to the time value's zone is
+// retained.  Times at any point during a given day (relative to timezone) are
+// normalized to the same date.
+//
+// Conversely, conversions back to standard time format may be done using the
+// Local, UTC, and In methods (semantically corresponding to the same-named
+// Time methods), but with the result normalized to midnight (the beginning of
+// the day) relative to that timezone.
+//
+// All functions and methods with the same names as those found in the stdlib
+// time package have identical semantics in epochdate, with the exception that
+// epochdate truncates time-of-day information.
 package epochdate
 
 import (
+	"bytes"
 	"errors"
 	"time"
 )
@@ -35,21 +36,28 @@ const (
 	maxUnix  = (1<<16)*day - 1
 )
 
+// Format constants, for use with Parse and the Date.Format method.
 const (
 	RFC3339        = "2006-01-02"
 	AmericanShort  = "1-2-06"
 	AmericanCommon = "01-02-06"
 )
 
-var ErrOutOfRange = errors.New("The given date is out of range")
+// ErrOutOfRange is returned if the input date is not a representable Date.
+var ErrOutOfRange = errors.New("epochdate: dates must be in the range [1970-01-01,2149-06-06]")
 
+// Date stores the number of days since Jan 1, 1970. The last representable
+// date is June 6, 2149.
 type Date uint16
 
 // Today returns the local date at this instant. If the local date does not
 // fall within the representable range, then then zero value will be returned
 // (1970-01-01).
 func Today() Date {
-	date, _ := NewFromTime(time.Now())
+	date, err := NewFromTime(time.Now())
+	if err != nil {
+		return 0
+	}
 	return date
 }
 
@@ -126,8 +134,8 @@ func (d Date) UnixNano() int64 {
 	return int64(d) * day * nsPerSec
 }
 
-// Identical to time.Time.Format, except that any time-of-day format specifiers
-// that are used will be equivalent to "00:00:00Z".
+// Format is identical to time.Time.Format, except that any time-of-day format
+// specifiers that are used will be equivalent to "00:00:00Z".
 func (d Date) Format(layout string) string {
 	return d.UTC().Format(layout)
 }
@@ -155,20 +163,30 @@ func (d Date) In(loc *time.Location) time.Time {
 	return t.Add(time.Duration(-offset) * time.Second)
 }
 
+// MarshalText implements encoding.TextMarshaler.
 func (d Date) MarshalText() ([]byte, error) {
 	return []byte(d.Format(RFC3339)), nil
 }
 
-func (d *Date) UnmarshalText(data []byte) (err error) {
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (d *Date) UnmarshalText(data []byte) error {
+	var err error
 	*d, err = Parse(RFC3339, string(data))
-	return
+	return err
 }
 
+// MarshalJSON implements json.Marshaler.
 func (d Date) MarshalJSON() ([]byte, error) {
 	return []byte(d.Format(`"` + RFC3339 + `"`)), nil
 }
 
-func (d *Date) UnmarshalJSON(data []byte) (err error) {
-	*d, err = Parse(`"`+RFC3339+`"`, string(data))
-	return
+// UnmarshalJSON implements json.Unmarshaler.
+func (d *Date) UnmarshalJSON(data []byte) error {
+	if bytes.Equal(data, jsonNull) {
+		return nil
+	}
+	data = bytes.Trim(data, `"`)
+	return d.UnmarshalText(data)
 }
+
+var jsonNull = []byte(`null`)
