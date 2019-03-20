@@ -116,7 +116,7 @@ func UnixInRange(seconds int64) bool {
 	return seconds >= 0 && seconds <= maxUnix
 }
 
-// Returns an RFC3339/ISO-8601 date string, of the form "2006-01-02".
+// String returns an RFC3339/ISO-8601 date string, of the form "2006-01-02".
 func (d Date) String() string {
 	return d.Format(RFC3339)
 }
